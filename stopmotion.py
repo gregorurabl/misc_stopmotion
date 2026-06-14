@@ -8,6 +8,7 @@ import time
 import json
 import shutil
 import subprocess
+import sys
 import glob
 
 import cv2
@@ -723,12 +724,22 @@ class StopMotionApp(ctk.CTk):
     # Export — ProRes 422HQ via ffmpeg, progress from stderr
     # -----------------------------------------------------------------------
 
+    def _get_ffmpeg(self) -> str | None:
+        if getattr(sys, "frozen", False):
+            for name in ("ffmpeg_arm64", "ffmpeg_intel", "ffmpeg"):
+                path = os.path.join(sys._MEIPASS, name)
+                if os.path.isfile(path):
+                    return path
+            return None
+        return shutil.which("ffmpeg")
+
     def _export_video(self):
         if not self.frames:
             self._set_status("no frames to export")
             return
-        if not shutil.which("ffmpeg"):
-            messagebox.showerror("Export", "ffmpeg not found in PATH.")
+        ffmpeg = self._get_ffmpeg()
+        if not ffmpeg:
+            messagebox.showerror("Export", "ffmpeg not found.")
             return
         out = filedialog.asksaveasfilename(
             defaultextension=".mov",
@@ -738,14 +749,14 @@ class StopMotionApp(ctk.CTk):
         if not out:
             return
         threading.Thread(target=self._run_export,
-                         args=(out, self.fps_var.get(), len(self.frames)),
+                         args=(out, self.fps_var.get(), len(self.frames), ffmpeg),
                          daemon=True).start()
 
-    def _run_export(self, out_path: str, fps: int, total: int):
+    def _run_export(self, out_path: str, fps: int, total: int, ffmpeg: str):
         self.after(0, lambda: self._set_status("exporting…"))
         self.after(0, lambda: self._set_export_progress(0.0))
 
-        cmd = ["ffmpeg", "-y",
+        cmd = [ffmpeg, "-y",
                "-framerate", str(fps),
                "-i", os.path.join(self.save_dir, "frame_%04d.png"),
                "-c:v", "prores_ks",
