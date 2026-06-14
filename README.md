@@ -2,7 +2,7 @@
 
 Stop-motion capture tool with onion skinning, project management, and ProRes export.
 
-<img width="1126" height="765" alt="grafik" src="https://github.com/user-attachments/assets/86430a1c-bd8e-42e7-a07f-5745db2b9313" />
+<img width="1317" height="1028" alt="grafik" src="https://github.com/user-attachments/assets/785f6293-f73c-48cd-bdcb-24b06b2dcf59" />
 
 ---
 
